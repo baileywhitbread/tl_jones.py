@@ -1,0 +1,320 @@
+﻿\documentclass[10pt]{article}
+
+
+\linespread{0.9}
+\usepackage[a4paper,margin=0.8in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{tikz-cd}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  showstringspaces=false
+}
+
+\newcommand{\End}{\mathrm{End}}
+
+\newcommand{\TL}{\mathrm{TL}}
+\newcommand{\trm}{\mathrm{tr}^{\mathrm{markov}}}
+\newcommand{\Tr}{\mathrm{tr}}
+\newcommand{\cl}{\mathrm{cl}}
+\newcommand{\qq}[1]{\left[#1\right]_v}
+
+\title{}
+\author{}
+\date{}
+
+\begin{document}
+\section*{\texttt{tl\_jones.py}}
+Code for computing Jones polynomials using Temperley--Lieb representations.
+
+\subsection*{Implementation}
+The code is organised around the maps
+\[
+\begin{tikzcd}
+B_n
+  \arrow[r, "\rho"]
+  \arrow[rr, bend right=30, "\rho_\lambda"']
+&
+\TL_n
+  \arrow[r, "\pi_\lambda"]
+&
+\mathrm{Mat}_{d_\lambda}(\mathbb{Q}(v))
+\end{tikzcd}
+\]
+which we explain now. 
+
+The unital associative $\mathbb{Q}(v)$-algebra \(\TL_n=\TL_n(\delta)\) (where $\delta=v+v^{-1}$) 
+has a basis of non-crossing \((n,n)\)-diagrams and the multiplication is stacking diagrams. 
+If $a$ and $b$ are two diagrams then $ab$ means place $b$ on top of $a$. 
+The algebra has standard generators $1,e_1,\ldots,e_{n-1}$ with $e_i$ having a 
+cup between $i$ and $i+1$ and a cap between $i$ and $i+1$. 
+The generators satisfy $e_i^2 = \delta e_i$.
+
+The algebra $\TL_n$ is semisimple with decomposition
+\[
+\TL_n 
+\cong \bigoplus_{\substack{\lambda \vdash n \\ \ell(\lambda)\le 2}} 
+\End(V_\lambda)
+\cong \bigoplus_{\substack{\lambda \vdash n \\ \ell(\lambda)\le 2}} 
+\mathrm{Mat}_{d_\lambda}(\mathbb{Q}(v))
+\]
+which we explain now. The vector space $V_\lambda$ is defined as follows. 
+If \(\lambda=(n-r,r)\), then $V_\lambda$ has basis consisting of
+non-crossing `link states' on \(n\) points with \(r\) caps and
+\(n-2r\) defects. For example, when \(n=5\) and \(\lambda=(3,2)\),
+a basis vector of $V_\lambda$ is the diagram
+\[
+\begin{tikzpicture}[scale=0.9, baseline=-0.2ex]
+  \foreach \x in {0,1,2,3,4} {
+    \fill (\x,0) circle (1.5pt);
+  }
+  \draw (0,0) .. controls (0,0.7) and (1,0.7) .. (1,0);
+  \draw (3,0) .. controls (3,0.7) and (4,0.7) .. (4,0);
+  \draw (2,0) -- (2,1);
+\end{tikzpicture}
+\]
+The algebra $\TL_n$ acts on $V_\lambda$ by stacking. (The paper by Westbury on Temperley--Lieb representations gives a few equivalent ways to describe this representation of $\TL_n$ and a formula for $d_\lambda = \dim(V_\lambda)$.)
+
+For each partition $\lambda = (n-r,r)$ of $n$, the braid group $B_n$ has a `Jones representation' $\rho_\lambda$ given as follows. Define the group homomorphism 
+\[
+\rho: B_n\to\TL_n^\times,\qquad \rho(\sigma_i)=v^{-1}I-v^{-2}e_i,
+\] 
+Let \(\pi_\lambda:\TL_n^\times\hookrightarrow\TL_n\to\mathrm{GL}_{d_\lambda}(\mathbb{Q}(v))\) be the projection map. Then the Jones representation $\rho_\lambda$ is 
+\[
+\rho_\lambda=\pi_\lambda\circ\rho:B_n\to\mathrm{GL}_{d_\lambda}(\mathbb{Q}(v)).
+\]
+
+The Jones representations of $B_n$ are useful for the following reason. First note the (unnormalised) Jones polynomial of a braid's closure equals the Markov trace of the braid's image in $\TL_n$:
+\[
+J_{\cl(\beta)}(v)=\trm_n\bigl(\rho(\beta)\bigr).
+\]
+This is defined by closing the diagram of $\rho(\beta)$ and sending each closed circle to $\delta=v+v^{-1}$. 
+
+Second, note \(\trm_n\) is a trace on $\TL_n$, so it must equal a linear combination 
+of traces on the matrix algebras $\mathrm{Mat}_{d_\lambda}(\mathbb{Q}(v))$. 
+But the only traces on $\mathrm{Mat}_{d_\lambda}(\mathbb{Q}(v))$ are 
+scalar multiples of the usual matrix trace. Therefore there are scalars \(c_\lambda\) such that
+\[
+J_{\cl(\beta)}(v)
+=\trm_n(\rho(\beta))
+=\sum_{\substack{\lambda \vdash n \\ \ell(\lambda)\le 2}}  
+c_\lambda\,\Tr(\rho_\lambda(\beta)).
+\] 
+Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$.
+
+
+
+
+
+
+\newpage
+
+
+
+
+
+\section{Overview}
+
+
+\subsection{\texttt{tl\_jones.py}}
+\begin{enumerate}
+  \item \texttt{quantum\_integer}
+  \item \texttt{projlen}
+  \item \texttt{gnf\_to\_braid\_word}
+  \item \texttt{link\_states}
+  \item \texttt{jones\_rep\_braid\_generator}
+  \item \texttt{jones\_rep\_braid\_word}
+  \item \texttt{jones\_polynomial}
+  \item \texttt{\_temperley\_lieb\_matrix}
+  \item \texttt{\_apply\_temperley\_lieb\_generator}
+  \item \texttt{\_garside\_delta\_word}
+  \item \texttt{\_permutation\_to\_braid\_word}
+  \item \texttt{\_validate\_gnf}
+  \item \texttt{\_inverse\_permutation}
+  \item \texttt{\_right\_descent\_set}
+  \item \texttt{\_left\_descent\_set}
+  \item \texttt{\_validate\_word}
+\end{enumerate}
+
+
+
+
+\subsection{\texttt{test\_tl\_jones.py}}
+\begin{enumerate}
+  \item \texttt{test\_01\_validation\_errors}
+  \item \texttt{test\_01a\_gnf\_to\_braid\_word\_examples}
+  \item \texttt{test\_01b\_gnf\_to\_braid\_word\_validation\_errors}
+  \item \texttt{test\_02\_projlen\_hard\_coded\_cases}
+  \item \texttt{test\_03\_link\_states\_examples}
+  \item \texttt{test\_04\_link\_state\_dimensions}
+  \item \texttt{test\_05\_temperley\_lieb\_relations}
+  \item \texttt{test\_06\_braid\_inverse\_relation}
+  \item \texttt{test\_07\_braid\_commuting\_relation}
+  \item \texttt{test\_08\_braid\_relation}
+  \item \texttt{test\_09\_jones\_polynomial\_simple\_cases}
+  \item \texttt{test\_10\_jones\_polynomial\_matches\_knotinfo\_random\_sample}
+  \item \texttt{load\_knotinfo\_fixture}
+\end{enumerate}
+
+
+
+
+
+
+
+
+\newpage
+\section{Function Explanations}
+
+\subsection{\texttt{tl\_jones.py}}
+
+\paragraph{\texttt{quantum\_two}}
+Stores the Laurent polynomial \(v+v^{-1}\), which is the quantum integer \([2]_v\).
+
+\paragraph{\texttt{quantum\_integer}}
+Builds the quantum integer $[m]_v = v^{m-1} + v^{m-3} + \cdots + v^{-(m-1)}$. 
+
+\paragraph{\texttt{projlen}}
+Computes the spread of a Laurent polynomial in the variable \(v\), meaning the difference between the largest and smallest exponent of \(v\) that appears with nonzero coefficient.
+
+\paragraph{\texttt{gnf\_to\_braid\_word}}
+Converts classical Garside normal-form data into its braid-word.
+It checks that the input is a valid Garside normal form, expands \(\Delta^d\),
+and then expands each simple factor into Artin generators.
+
+\paragraph{\texttt{link\_states}}
+Constructs the basis of the standard Temperley--Lieb module \(V_{(n-r,r)}\).
+A link state is encoded as a tuple: \texttt{-1} means a defect, while a nonnegative entry records the paired endpoint.
+
+\paragraph{\texttt{jones\_rep\_braid\_generator}}
+Returns the matrix of the positive braid generator \(\sigma_i\) acting on \(V_{(n-r,r)}\).
+It uses the formula $\rho(\sigma_i) = v^{-1}I - v^{-2}E_i$.
+
+\paragraph{\texttt{jones\_rep\_braid\_word}}
+Converts a whole braid word into a matrix by multiplying the matrices of its generators.
+Positive integers represent positive braid generators and negative integers represent inverses.
+
+\paragraph{\texttt{jones\_polynomial}}
+Computes the unnormalised Jones polynomial of the closure of a braid word.
+It sums traces over all standard modules: $J_{\mathrm{cl}(\beta)}(v)
+= \sum_r [n-2r+1]_v \operatorname{Tr}(\rho_{(n-r,r)}(\beta))$.
+
+\paragraph{\texttt{\_temperley\_lieb\_matrix}}
+Builds the matrix of the Temperley--Lieb generator \(E_i\) on the link-state basis.
+This is an internal helper used by \texttt{jones\_rep\_braid\_generator}.
+
+\paragraph{\texttt{\_apply\_temperley\_lieb\_generator}}
+Applies the local action of \(E_i\) to one single link state.
+It handles the four basic cases: adjacent cap, two defects, one defect plus one paired endpoint, and two paired endpoints.
+
+\paragraph{\texttt{\_garside\_delta\_word}}
+Builds the chosen Artin-generator word for the Garside half-twist \(\Delta_n\), using the ascending-block convention $[1,2,\dots,n-1,\,1,2,\dots,n-2,\,\dots,\,1]$.
+
+\paragraph{\texttt{\_permutation\_to\_braid\_word}}
+Converts a one-line permutation into a positive braid word by a deterministic bubble-left procedure.
+This is used to expand each simple factor in the Garside normal form.
+
+\paragraph{\texttt{\_validate\_gnf}}
+Checks the full Garside normal-form input for \texttt{gnf\_to\_braid\_word}.
+It verifies that each simple factor is a one-line permutation of \(1,\dots,n\),
+rejects the identity and full-\(\Delta\) permutations, and checks the classical
+Garside descent-set condition $L(\text{next}) \subseteq R(\text{previous})$.
+
+\paragraph{\texttt{\_inverse\_permutation}}
+Builds the inverse of a one-line permutation.
+
+\paragraph{\texttt{\_right\_descent\_set}}
+Returns the right descent set of a permutation.
+
+\paragraph{\texttt{\_left\_descent\_set}}
+Returns the left descent set via the right descent set of the inverse permutation.
+
+\paragraph{\texttt{\_validate\_word}}
+Checks that a braid word is an iterable of nonzero integers, checks that each
+generator index lies in the range \(1,\dots,n-1\), and converts the word to a tuple.
+
+
+
+
+
+
+
+
+
+
+\newpage
+\subsection{\texttt{test\_tl\_jones.py}}
+
+\paragraph{\texttt{test\_01\_validation\_errors}}
+Checks that invalid inputs raise \texttt{ValueError} in the expected places.
+This is the most basic defensive test in the suite.
+
+\paragraph{\texttt{test\_01a\_gnf\_to\_braid\_word\_examples}}
+Checks explicit examples of the Garside-normal-form conversion code, including positive and negative powers of \(\Delta\), individual simple factors, and a short multi-factor example.
+
+\paragraph{\texttt{test\_01b\_gnf\_to\_braid\_word\_validation\_errors}}
+Checks that invalid Garside-normal-form inputs are rejected.
+This includes bad strand counts, non-integer powers, malformed permutations, forbidden identity or \(\Delta\) factors, and violations of the descent-set rule.
+
+\paragraph{\texttt{test\_02\_projlen\_hard\_coded\_cases}}
+Checks \texttt{projlen} on a collection of explicit Laurent polynomials, including monomials, constants, zero, and examples with both positive and negative exponents.
+
+\paragraph{\texttt{test\_03\_link\_states\_examples}}
+Checks half a dozen explicit hard-coded link-state bases.
+This confirms both the combinatorial construction and the ordering convention of the basis.
+
+\paragraph{\texttt{test\_04\_link\_state\_dimensions}}
+Checks that the number of basis states agrees with $\binom{n}{r} - \binom{n}{r-1}$.
+
+\paragraph{\texttt{test\_05\_temperley\_lieb\_relations}}
+Checks Temperley--Lieb algebra relations for the internal matrices \(E_i\):
+\[
+E_i^2 = \delta E_i,\qquad
+E_iE_j = E_jE_i \text{ for } |i-j|>1,\qquad
+E_iE_{i+1}E_i = E_i.
+\]
+
+\paragraph{\texttt{test\_06\_braid\_inverse\_relation}}
+Checks the matrix of \(\sigma_i^{-1}\) is the inverse of the one of \(\sigma_i\).
+
+\paragraph{\texttt{test\_07\_braid\_commuting\_relation}}
+Checks the braid-group relation $\sigma_i \sigma_j = \sigma_j \sigma_i\ (|i-j|>1)$.
+
+\paragraph{\texttt{test\_08\_braid\_relation}}
+Checks the main braid relation $\sigma_i \sigma_{i+1} \sigma_i=\sigma_{i+1} \sigma_i \sigma_{i+1}$.
+
+\paragraph{\texttt{test\_09\_jones\_polynomial\_simple\_cases}}
+Checks a small collection of explicit Jones polynomial examples, including the identity braid and several low-strand examples.
+
+\paragraph{\texttt{test\_10\_jones\_polynomial\_matches\_knotinfo\_random\_sample}}
+Chooses a (seeded) random sample of 30 knots from the KnotInfo-derived CSV file, prints their names, and checks that the code reproduces the database values after the normalisation change of variables.
+
+\paragraph{\texttt{load\_knotinfo\_fixture}}
+Loads the CSV file \texttt{jones\_braid\_knots.csv} and converts each row into a dictionary with parsed braid word and metadata.
+
+
+\end{document}
+
+
+
+
+
+
+
+
