@@ -102,21 +102,21 @@ Let \(\pi_\lambda:\TL_n^\times\hookrightarrow\TL_n\to\mathrm{GL}_{d_\lambda}(\ma
 
 The Jones representations of $B_n$ are useful for the following reason. First note the (unnormalised) Jones polynomial of a braid's closure equals the Markov trace of the braid's image in $\TL_n$:
 \[
-J_{\cl(\beta)}(v)=\trm_n\bigl(\rho(\beta)\bigr).
+J_{\cl(\beta)}(v)=\trm\bigl(\rho(\beta)\bigr).
 \]
 This is defined by closing the diagram of $\rho(\beta)$ and sending each closed circle to $\delta=v+v^{-1}$. 
 
-Second, note \(\trm_n\) is a trace on $\TL_n$, so it must equal a linear combination 
+Second, note \(\trm\) is a trace on $\TL_n$, so it must equal a linear combination 
 of traces on the matrix algebras $\mathrm{Mat}_{d_\lambda}(\mathbb{Q}(v))$. 
 But the only traces on $\mathrm{Mat}_{d_\lambda}(\mathbb{Q}(v))$ are 
 scalar multiples of the usual matrix trace. Therefore there are scalars \(c_\lambda\) such that
 \[
 J_{\cl(\beta)}(v)
-=\trm_n(\rho(\beta))
+=\trm(\rho(\beta))
 =\sum_{\substack{\lambda \vdash n \\ \ell(\lambda)\le 2}}  
 c_\lambda\,\Tr(\rho_\lambda(\beta)).
 \] 
-Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$.
+Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$, where $\qq{m}$ is quantum $m$. 
 
 
 
@@ -184,9 +184,6 @@ Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$.
 
 \subsection{\texttt{tl\_jones.py}}
 
-\paragraph{\texttt{quantum\_two}}
-Stores the Laurent polynomial \(v+v^{-1}\), which is the quantum integer \([2]_v\).
-
 \paragraph{\texttt{quantum\_integer}}
 Builds the quantum integer $[m]_v = v^{m-1} + v^{m-3} + \cdots + v^{-(m-1)}$. 
 
@@ -213,7 +210,7 @@ Positive integers represent positive braid generators and negative integers repr
 \paragraph{\texttt{jones\_polynomial}}
 Computes the unnormalised Jones polynomial of the closure of a braid word.
 It sums traces over all standard modules: $J_{\mathrm{cl}(\beta)}(v)
-= \sum_r [n-2r+1]_v \operatorname{Tr}(\rho_{(n-r,r)}(\beta))$.
+= \sum_r [n-2r+1]_v \operatorname{tr}(\rho_{(n-r,r)}(\beta))$.
 
 \paragraph{\texttt{\_temperley\_lieb\_matrix}}
 Builds the matrix of the Temperley--Lieb generator \(E_i\) on the link-state basis.
