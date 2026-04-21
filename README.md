@@ -2,7 +2,9 @@
 
 Compute Jones polynomials of braid closures in Python.
 
-#### Example
+Code explained in the documentation.pdf.
+
+Example:
 
 ```python
 import tl_jones as tl
