@@ -93,27 +93,29 @@ The algebra $\TL_n$ acts on $V_\lambda$ by stacking. (The paper by Westbury on T
 
 For each partition $\lambda = (n-r,r)$ of $n$, the braid group $B_n$ has a `Jones representation' $\rho_\lambda$ given as follows. Define the group homomorphism 
 \[
-\rho: B_n\to\TL_n^\times,\qquad \rho(\sigma_i)=v^{-1}I-v^{-2}e_i,
+\rho: B_n\to\TL_n^\times,\qquad \rho(\sigma_i)=e_i-vI,
 \] 
 Let \(\pi_\lambda:\TL_n^\times\hookrightarrow\TL_n\to\mathrm{GL}_{d_\lambda}(\mathbb{Q}(v))\) be the projection map. Then the Jones representation $\rho_\lambda$ is 
 \[
 \rho_\lambda=\pi_\lambda\circ\rho:B_n\to\mathrm{GL}_{d_\lambda}(\mathbb{Q}(v)).
 \]
 
-The Jones representations of $B_n$ are useful for the following reason. First note the (unnormalised) Jones polynomial of a braid's closure equals the Markov trace of the braid's image in $\TL_n$:
+The Jones representations of $B_n$ are useful when paired with a certain trace on $\TL_n$. 
+The Markov trace on $\TL_n$ is defined on basis elements by closing the element's diagram 
+and scaling by $\delta$ for each closed circle. 
+Then the (unnormalised) Jones polynomial of a braid's closure is recovered from the
+Markov trace of the braid's image in $\TL_n$, up to a factor determined by the braid's writhe. 
+That is, we have
 \[
-J_{\cl(\beta)}(v)=\trm\bigl(\rho(\beta)\bigr).
+J_{\cl(\beta)}(v)=(-v^2)^{-w(\beta)}\,\trm\bigl(\rho(\beta)\bigr).
 \]
-This is defined by closing the diagram of $\rho(\beta)$ and sending each closed circle to $\delta=v+v^{-1}$. 
 
-Second, note \(\trm\) is a trace on $\TL_n$, so it must equal a linear combination 
-of traces on the matrix algebras $\mathrm{Mat}_{d_\lambda}(\mathbb{Q}(v))$. 
-But the only traces on $\mathrm{Mat}_{d_\lambda}(\mathbb{Q}(v))$ are 
-scalar multiples of the usual matrix trace. Therefore there are scalars \(c_\lambda\) such that
+Note \(\trm\) is a trace map on $\TL_n$, so on the matrix algebra side, it corresponds to a linear combination 
+of plain matrix traces. That is, there are scalars \(c_\lambda\) such that
 \[
 J_{\cl(\beta)}(v)
-=\trm(\rho(\beta))
-=\sum_{\substack{\lambda \vdash n \\ \ell(\lambda)\le 2}}  
+ =(-v^2)^{-w(\beta)}\,\trm(\rho(\beta))
+ =(-v^2)^{-w(\beta)}\sum_{\substack{\lambda \vdash n \\ \ell(\lambda)\le 2}}  
 c_\lambda\,\Tr(\rho_\lambda(\beta)).
 \] 
 Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$, where $\qq{m}$ is quantum $m$. 
@@ -164,6 +166,7 @@ Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$, w
   \item \texttt{test\_03\_link\_states\_examples}
   \item \texttt{test\_04\_link\_state\_dimensions}
   \item \texttt{test\_05\_temperley\_lieb\_relations}
+  \item \texttt{test\_05a\_braid\_generator\_formula}
   \item \texttt{test\_06\_braid\_inverse\_relation}
   \item \texttt{test\_07\_braid\_commuting\_relation}
   \item \texttt{test\_08\_braid\_relation}
@@ -201,16 +204,17 @@ A link state is encoded as a tuple: \texttt{-1} means a defect, while a nonnegat
 
 \paragraph{\texttt{jones\_rep\_braid\_generator}}
 Returns the matrix of the positive braid generator \(\sigma_i\) acting on \(V_{(n-r,r)}\).
-It uses the formula $\rho(\sigma_i) = v^{-1}I - v^{-2}E_i$.
+It uses the formula $\rho(\sigma_i) = e_i - vI$.
 
 \paragraph{\texttt{jones\_rep\_braid\_word}}
 Converts a whole braid word into a matrix by multiplying the matrices of its generators.
 Positive integers represent positive braid generators and negative integers represent inverses.
 
 \paragraph{\texttt{jones\_polynomial}}
-Computes the unnormalised Jones polynomial of the closure of a braid word.
-It sums traces over all standard modules: $J_{\mathrm{cl}(\beta)}(v)
-= \sum_r [n-2r+1]_v \operatorname{tr}(\rho_{(n-r,r)}(\beta))$.
+Computes the unnormalised Jones polynomial of the closure of a braid word using the formula
+$J_{\mathrm{cl}(\beta)}(v)
+= (-v^2)^{-w(\beta)}
+\sum_r [n-2r+1]_v \operatorname{tr}(\rho_{(n-r,r)}(\beta))$.
 
 \paragraph{\texttt{\_temperley\_lieb\_matrix}}
 Builds the matrix of the Temperley--Lieb generator \(E_i\) on the link-state basis.
@@ -280,12 +284,16 @@ This confirms both the combinatorial construction and the ordering convention of
 Checks that the number of basis states agrees with $\binom{n}{r} - \binom{n}{r-1}$.
 
 \paragraph{\texttt{test\_05\_temperley\_lieb\_relations}}
-Checks Temperley--Lieb algebra relations for the internal matrices \(E_i\):
+Checks Temperley--Lieb algebra relations for the matrices of the \(e_i\):
 \[
-E_i^2 = \delta E_i,\qquad
-E_iE_j = E_jE_i \text{ for } |i-j|>1,\qquad
-E_iE_{i+1}E_i = E_i.
+e_i^2 = \delta e_i,\qquad
+e_ie_j = e_je_i \text{ for } |i-j|>1,\qquad
+e_iE_{i+1}e_i = e_i.
 \]
+
+\paragraph{\texttt{test\_05a\_braid\_generator\_formula}}
+Checks that the public braid-generator matrix is the matrix of \(e_i - vI\) on a
+small representative range of \((n,r,i)\).
 
 \paragraph{\texttt{test\_06\_braid\_inverse\_relation}}
 Checks the matrix of \(\sigma_i^{-1}\) is the inverse of the one of \(\sigma_i\).

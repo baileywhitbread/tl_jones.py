@@ -120,10 +120,10 @@ def link_states(n: int, r: int) -> tuple[tuple[int, ...], ...]:
 
 
 def jones_rep_braid_generator(n: int, r: int, i: int) -> sp.Matrix:
-    """Return rho_(n-r,r)(sigma_i), the positive braid-generator matrix."""
+    """Return rho_(n-r,r)(sigma_i) using the convention E_i - v I."""
     e_i = _temperley_lieb_matrix(n, r, i)
     identity = sp.eye(e_i.rows)
-    return v**-1 * identity - v**-2 * e_i
+    return e_i - v * identity
 
 
 def jones_rep_braid_word(n: int, r: int, word: Iterable[int]) -> sp.Matrix:
@@ -154,17 +154,18 @@ def jones_rep_braid_word(n: int, r: int, word: Iterable[int]) -> sp.Matrix:
 
 
 def jones_polynomial(n: int, word: Iterable[int]) -> sp.Expr:
-    """Return the unnormalised Jones polynomial of the braid closure."""
+    """Return the unnormalised Jones polynomial via a writhe-corrected trace."""
     if type(n) is not int or n < 1:
         raise ValueError("n must be a positive integer")
     word = _validate_word(n, word)
+    writhe = sum(1 if generator > 0 else -1 for generator in word)
 
     total = sp.Integer(0)
     for r in range(n // 2 + 1):
         coefficient = quantum_integer(n - 2 * r + 1)
         total += coefficient * sp.trace(jones_rep_braid_word(n, r, word))
 
-    return sp.expand(total)
+    return sp.expand(((-1) ** writhe) * v ** (-2 * writhe) * total)
 
 
 def _temperley_lieb_matrix(n: int, r: int, i: int) -> sp.Matrix:

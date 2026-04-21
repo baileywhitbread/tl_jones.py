@@ -163,6 +163,16 @@ class JonesPolynomialTests(unittest.TestCase):
                                     0,
                                 )
 
+    def test_05a_braid_generator_formula(self):
+        for n in range(2, 6):
+            for r in range(n // 2 + 1):
+                dimension = len(tl.link_states(n, r))
+                identity = sp.eye(dimension)
+                for i in range(1, n):
+                    expected = tl._temperley_lieb_matrix(n, r, i) - tl.v * identity
+                    actual = tl.jones_rep_braid_generator(n, r, i)
+                    self.assertEqual(actual, expected)
+
     def test_06_braid_inverse_relation(self):
         for n in range(2, 11):
             for r in range(n // 2 + 1):
