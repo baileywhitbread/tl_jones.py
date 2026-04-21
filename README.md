@@ -16,5 +16,5 @@ print(tl.jones_polynomial(2, [1, 1, 1]))
 
 #### Version history
 
-- v1 used the representation $\rho\colon B_n \to \mathrm{TL}_n^\times$ defined by $\rho(\sigma_i) = v^{-1}I - v^{-2}e_i$ and the formula $J_{\widehat{\beta}}(v) = \mathrm{tr}^\mathrm{markov}(\rho(\beta))$.
-- v2 uses the representation $\rho\colon B_n \to \mathrm{TL}_n^\times$ defined by $\rho(\sigma_i) = e_i - vI$ and the formula $J_{\widehat{\beta}}(v) = (-v^2)^{-w(\beta)}\,\mathrm{tr}^\mathrm{markov}(\rho(\beta))$. 
+- v1 used the representation $`\rho\colon B_n \to \mathrm{TL}_n^\times$` defined by $`\rho(\sigma_i) = v^{-1}I - v^{-2}e_i$` and the formula $`J_{\widehat{\beta}}(v) = \mathrm{tr}^\mathrm{markov}(\rho(\beta))$`.
+- v2 uses the representation $`\rho\colon B_n \to \mathrm{TL}_n^\times$` defined by $`\rho(\sigma_i) = e_i - vI$` and the formula $`J_{\widehat{\beta}}(v) = (-v^2)^{-w(\beta)}\,\mathrm{tr}^\mathrm{markov}(\rho(\beta))$`. 
