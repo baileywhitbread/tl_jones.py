@@ -1,0 +1,176 @@
+\documentclass[10pt]{article}
+
+\linespread{1.1}
+\usepackage[a4paper,margin=0.8in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  showstringspaces=false
+}
+
+\newcommand{\Tr}{\mathrm{tr}}
+\newcommand{\qq}[1]{\left[#1\right]_v}
+\newcommand{\FF}{\mathbf{F}}
+
+\title{}
+\author{}
+\date{}
+
+\begin{document}
+\section*{\texttt{tl\_jones\_ff.py}}
+Code to compute Jones representation trace polynomials $\mathrm{tr}(\rho_\lambda(\beta))$, often more efficiently than symbolic matrix multiplication, using finite-field evaluations. 
+
+\subsection*{Implementation}
+We compute the trace polynomial $\mathrm{tr}(\rho_\lambda(\beta))\in\mathbb{Z}[v,v^{-1}]$ as follows:
+\begin{enumerate}
+\item Write $\beta=\sigma_{i_1}^{\varepsilon_1}\cdots\sigma_{i_L}^{\varepsilon_L}$ with $\varepsilon_j \in\{\pm1\}$ and choose a large prime $p$ and a primitive root of unity $\omega$ in $\mathbb{F}_p^\times$. 
+\item Evaluate the Jones representation matrices of each braid generator at $v=\omega^0,\omega^1,\ldots,\omega^{2L}$,
+\item Multiply these evaluated generator matrices to form evaluated braid matrices,
+\item Take traces of these evaluated braid matrices to form evaluated traces in $\mathbb{F}_p$,
+\item Use inverse DFT on these evaluated traces to form the trace polynomial's reduction mod $p$,
+\item Lift the trace polynomial's reduction mod $p$ to form the true trace polynomial. 
+\end{enumerate}
+
+We explain the choice of $p$ and $\omega$ now. We know $\mathrm{tr}(\rho_\lambda(\beta))$ is of the form
+\[
+t(v):=\sum_{m=-L}^{L} c_m v^m.
+\]
+So it suffices to compute the shifted polynomial
+\[
+s(v):=v^L\, t(v) = \sum_{j=0}^{2L} a_j v^j,
+\qquad a_j=c_{j-L}.
+\]
+These coefficients are determined by \(2L+1\) evaluations. Suppose the input word is nonempty, so that $L>0$. Define $C := d^L$, where $d:= \dim(V_\lambda)$. Choose the smallest prime \(p\) such that 
+\[
+p>2C
+\qquad
+\text{and}
+\qquad
+p\equiv 1\ \text{mod}\ {2L+1}.
+\]
+Furthermore, choose a primitive $(2L+1)^\text{th}$ root of unity $\omega$ in $\mathbb{F}_p$. 
+
+The latter condition on $p$ ensures the root $\omega$ exists. The former condition on $p$ ensures we can determine each coefficient $c_m$, and therefore each shifted coefficient $a_j$, from its residue modulo $p$. This is because each coefficient lies in the interval $[-C,C]$, which has length $2C<p$.
+
+Now suppose we have evaluated traces $t(\omega^k) \in\mathbb{F}_p$ for $k=0,1,\ldots,2L$. Then $s(\omega^k)=\omega^{kL}\, t(\omega^k)$ and we have
+\[
+\omega^{kL}\, t(\omega^k) = \sum_{i=0}^{2L} a_i\omega^{ki}.
+\]
+The inverse discrete Fourier transform gives
+\[
+a_j
+=\frac{1}{2L+1}\sum_{k=0}^{2L}
+\omega^{kL}t(\omega^k)\,\omega^{-kj}
+\quad\text{in }\mathbb{F}_p,
+\]
+which recovers the shifted coefficients modulo \(p\). Each residue is then lifted to its symmetric integer representative in the interval \([-p/2,p/2]\). Since the true coefficients lie in \([-C,C]\) and \(p>2C\), this lift gives the exact integer coefficient. Finally, the code unshifts by using \(c_{j-L}=a_j\), so
+\[
+t(v)=v^{-L}s(v)=\sum_{j=0}^{2L} a_j v^{j-L}.
+\]
+
+
+\newpage
+\subsection*{Overview}
+
+
+\subsubsection*{\texttt{tl\_jones\_ff.py}}
+\begin{enumerate}
+  \item \texttt{FFMatrix}
+  \item \texttt{FFEvaluationContext}
+  \item \texttt{ff\_jones\_polynomial}
+  \item \texttt{ff\_jones\_rep\_trace}
+  \item \texttt{ff\_jones\_rep\_braid\_word}
+  \item \texttt{\_ff\_create\_context}
+  \item \texttt{\_inverse\_dft}
+  \item \texttt{\_ff\_temperley\_lieb\_matrix}
+  \item \texttt{\_identity\_matrix}
+  \item \texttt{\_matrix\_multiply\_mod}
+\end{enumerate}
+
+The main public entry point is \texttt{ff\_jones\_polynomial}, which computes the same unnormalised Jones polynomial as \texttt{tl\_jones.jones\_polynomial}, but computes each representation trace using finite-field interpolation.
+The function \texttt{ff\_jones\_rep\_trace} computes one such trace polynomial.
+The function \texttt{ff\_jones\_rep\_braid\_word} computes the evaluated braid matrices which feed into the trace computation.
+The remaining functions are internal helpers for building the finite-field context, applying inverse DFT, representing sparse Temperley--Lieb action data, and multiplying dense finite-field matrices.
+
+
+\newpage
+\subsection*{Function Explanations}
+
+\paragraph{\texttt{FFMatrix}}
+This is a type alias for a dense finite-field matrix, represented as a list of rows, where each row is a list of Python integers.
+The entries are always interpreted modulo the prime stored in the relevant \texttt{FFEvaluationContext}.
+
+\paragraph{\texttt{FFEvaluationContext}}
+Stores the shared finite-field data needed to evaluate and reconstruct one trace.
+It contains the strand number \(n\), the index \(r\) for the module \(V_{(n-r,r)}\), the validated braid word, the prime \(p\), the interpolation order, the chosen root of unity, the degree bound, the coefficient bound, and the dimension of the link-state basis.
+
+\paragraph{\texttt{ff\_jones\_polynomial}}
+Computes the unnormalised Jones polynomial of the closure of a braid word.
+It validates the braid word, computes its writhe, then forms the same weighted trace sum as \texttt{tl\_jones.jones\_polynomial}:
+\[
+(-v^2)^{-w(\beta)}
+\sum_{r=0}^{\lfloor n/2\rfloor}
+\qq{n-2r+1}\,
+\Tr(\rho_{(n-r,r)}(\beta)).
+\]
+The difference is that each trace \(\Tr(\rho_{(n-r,r)}(\beta))\) is computed by \texttt{ff\_jones\_rep\_trace}.
+
+\paragraph{\texttt{ff\_jones\_rep\_trace}}
+Computes the Laurent polynomial \(\Tr(\rho_{(n-r,r)}(\beta))\) by finite-field interpolation.
+It first builds an \texttt{FFEvaluationContext}, calls \texttt{ff\_jones\_rep\_braid\_word} to obtain the braid matrix evaluated at each interpolation point, takes the trace of each evaluated matrix modulo \(p\), applies \texttt{\_inverse\_dft}, and finally lifts the residues to symmetric integer representatives to recover the exact Laurent polynomial.
+
+\paragraph{\texttt{ff\_jones\_rep\_braid\_word}}
+Evaluates the Jones representation of a whole braid word at every interpolation root \(1,\omega,\ldots,\omega^{M-1}\), where \(M\) is the interpolation order.
+For each root it builds each generator matrix from cached Temperley--Lieb action data, multiplies the generator matrices in braid-word order, and returns the resulting list of dense finite-field braid matrices.
+This is the finite-field analogue of \texttt{tl\_jones.jones\_rep\_braid\_word}, except that it returns one evaluated matrix for each interpolation point rather than one symbolic matrix.
+
+\paragraph{\texttt{\_ff\_create\_context}}
+Validates \(n\), \(r\), and the braid word, computes \(d=\dim(V_{(n-r,r)})\), and chooses the prime and root of unity used for reconstruction.
+For the empty word it uses degree bound \(0\), interpolation order \(1\), and root of unity \(1\).
+For a nonempty word of length \(L\), it uses degree bound \(L\), interpolation order \(2L+1\), coefficient bound \(d^L\), and chooses a prime \(p>2d^L\) with \(p\equiv 1 \pmod{2L+1}\), so that a primitive \((2L+1)\)-st root of unity exists in \(\FF_p\).
+
+\paragraph{\texttt{\_inverse\_dft}}
+Recovers the shifted Laurent coefficients modulo \(p\) from the evaluated trace values.
+Given values \(t(\omega^k)\), it first multiplies by \(\omega^{kL}\) to shift the Laurent polynomial into an ordinary polynomial of degree at most \(2L\), then applies the inverse discrete Fourier transform over \(\FF_p\).
+The returned list contains residues corresponding to the powers \(v^{-L},v^{-L+1},\ldots,v^L\).
+
+\paragraph{\texttt{\_ff\_temperley\_lieb\_matrix}}
+Computes cached sparse column-action data for the Temperley--Lieb generator \(E_i\) on the link-state basis of \(V_{(n-r,r)}\).
+For each basis vector it records the coefficient of the image and the row index of the resulting basis vector.
+This stores the same information as \texttt{tl\_jones.\_temperley\_lieb\_matrix}, but avoids constructing a symbolic SymPy matrix.
+
+\paragraph{\texttt{\_identity\_matrix}}
+Builds the dense identity matrix of a given size as a list of lists of integers.
+It is used as the starting matrix when multiplying the evaluated generator matrices for a braid word.
+
+\paragraph{\texttt{\_matrix\_multiply\_mod}}
+Multiplies two dense integer matrices modulo \(p\).
+The implementation skips zero entries in the left and right factors, which is useful because many evaluated Temperley--Lieb generator matrices are sparse or nearly sparse.
+
+
+
+
+
+
+
+
+
+
+\end{document}

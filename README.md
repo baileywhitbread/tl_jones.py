@@ -16,5 +16,5 @@ print(tl.jones_polynomial(2, [1, 1, 1]))
 
 #### Version history
 
-- v1 used the braid group representation sending \sigma_i to v^{-1}I - v^{-2}e_i.
-- v2 uses the braid group representation sending \sigma_i to e_i - vI.
+- v1.1 swapped the braid group representation; instead of sending \sigma_i to v^{-1}I - v^{-2}e_i, we send \sigma_i to e_i - vI.
+- v2.0 added tl_jones_ff.py which implements inverse discrete Fourier transform to speed up calculations.

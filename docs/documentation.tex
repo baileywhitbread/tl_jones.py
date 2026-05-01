@@ -131,10 +131,10 @@ Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$, w
 
 
 
-\section{Overview}
+\subsection*{Overview}
 
 
-\subsection{\texttt{tl\_jones.py}}
+\subsubsection*{\texttt{tl\_jones.py}}
 \begin{enumerate}
   \item \texttt{quantum\_integer}
   \item \texttt{projlen}
@@ -157,7 +157,7 @@ Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$, w
 
 
 
-\subsection{\texttt{test\_tl\_jones.py}}
+\subsubsection*{\texttt{test\_tl\_jones.py}}
 \begin{enumerate}
   \item \texttt{test\_01\_validation\_errors}
   \item \texttt{test\_01a\_gnf\_to\_braid\_word\_examples}
@@ -183,9 +183,7 @@ Writing \(\lambda=(n-r,r)\), we can prove the formula $c_\lambda=\qq{n-2r+1}$, w
 
 
 \newpage
-\section{Function Explanations}
-
-\subsection{\texttt{tl\_jones.py}}
+\subsection*{Function Explanations}
 
 \paragraph{\texttt{quantum\_integer}}
 Builds the quantum integer $[m]_v = v^{m-1} + v^{m-3} + \cdots + v^{-(m-1)}$. 
@@ -260,8 +258,6 @@ generator index lies in the range \(1,\dots,n-1\), and converts the word to a tu
 
 
 \newpage
-\subsection{\texttt{test\_tl\_jones.py}}
-
 \paragraph{\texttt{test\_01\_validation\_errors}}
 Checks that invalid inputs raise \texttt{ValueError} in the expected places.
 This is the most basic defensive test in the suite.

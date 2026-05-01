@@ -1,6 +1,6 @@
 """Jones polynomials from braid words via Temperley-Lieb representations.
 
-This module follows the setup in documentation.tex.
+This module follows the setup in docs/documentation.tex.
 It computes the unnormalised Jones polynomial of a braid closure using the
 link-state representations of the Temperley-Lieb algebra.
 """
@@ -119,11 +119,14 @@ def link_states(n: int, r: int) -> tuple[tuple[int, ...], ...]:
     return tuple(states)
 
 
-def jones_rep_braid_generator(n: int, r: int, i: int) -> sp.Matrix:
-    """Return rho_(n-r,r)(sigma_i) using the convention E_i - v I."""
+def jones_rep_braid_generator(
+    n: int, r: int, i: int, inverse: bool = False
+) -> sp.MatrixBase:
+    """Return rho_(n-r,r)(sigma_i^(+/-1)) via E_i - v^(+/-1) I."""
     e_i = _temperley_lieb_matrix(n, r, i)
     identity = sp.eye(e_i.rows)
-    return e_i - v * identity
+    scalar = v**-1 if inverse else v
+    return e_i - scalar * identity
 
 
 def jones_rep_braid_word(n: int, r: int, word: Iterable[int]) -> sp.Matrix:
@@ -144,11 +147,10 @@ def jones_rep_braid_word(n: int, r: int, word: Iterable[int]) -> sp.Matrix:
 
     for generator in word:
         index = abs(generator)
-        factor = jones_rep_braid_generator(n, r, index)
-        if generator > 0:
-            matrix = matrix * factor
-        else:
-            matrix = matrix * factor.inv()
+        factor = jones_rep_braid_generator(
+            n, r, index, inverse=(generator < 0)
+        )
+        matrix = matrix * factor
 
     return matrix
 
@@ -168,7 +170,8 @@ def jones_polynomial(n: int, word: Iterable[int]) -> sp.Expr:
     return sp.expand(((-1) ** writhe) * v ** (-2 * writhe) * total)
 
 
-def _temperley_lieb_matrix(n: int, r: int, i: int) -> sp.Matrix:
+@cache
+def _temperley_lieb_matrix(n: int, r: int, i: int) -> sp.ImmutableMatrix:
     """Return the matrix of E_i on the link-state basis for V_(n-r,r)."""
     if type(n) is not int or n < 1:
         raise ValueError("n must be a positive integer")
@@ -187,7 +190,8 @@ def _temperley_lieb_matrix(n: int, r: int, i: int) -> sp.Matrix:
             row = state_to_index[next_state]
             matrix[row, column] += coefficient
 
-    return matrix
+    # Freeze the matrix before caching so later callers cannot mutate it.
+    return sp.ImmutableMatrix(matrix)
 
 
 def _apply_temperley_lieb_generator(

@@ -1,15 +1,20 @@
 import ast
 import csv
 import random
+import sys
 import unittest
 from math import comb
 from pathlib import Path
 
 import sympy as sp
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import tl_jones as tl
 
-FIXTURE_PATH = Path(__file__).parent / "jones_braid_knots.csv"
+FIXTURE_PATH = PROJECT_ROOT / "data" / "jones_braid_knots.csv"
 
 
 class JonesPolynomialTests(unittest.TestCase):
@@ -169,9 +174,19 @@ class JonesPolynomialTests(unittest.TestCase):
                 dimension = len(tl.link_states(n, r))
                 identity = sp.eye(dimension)
                 for i in range(1, n):
-                    expected = tl._temperley_lieb_matrix(n, r, i) - tl.v * identity
-                    actual = tl.jones_rep_braid_generator(n, r, i)
-                    self.assertEqual(actual, expected)
+                    positive_expected = (
+                        tl._temperley_lieb_matrix(n, r, i) - tl.v * identity
+                    )
+                    positive_actual = tl.jones_rep_braid_generator(n, r, i)
+                    self.assertEqual(positive_actual, positive_expected)
+
+                    inverse_expected = (
+                        tl._temperley_lieb_matrix(n, r, i) - tl.v**-1 * identity
+                    )
+                    inverse_actual = tl.jones_rep_braid_generator(
+                        n, r, i, inverse=True
+                    )
+                    self.assertEqual(inverse_actual, inverse_expected)
 
     def test_06_braid_inverse_relation(self):
         for n in range(2, 11):
@@ -179,7 +194,10 @@ class JonesPolynomialTests(unittest.TestCase):
                 identity = sp.eye(len(tl.link_states(n, r)))
                 for i in range(1, n):
                     positive = tl.jones_rep_braid_generator(n, r, i)
-                    negative = tl.jones_rep_braid_word(n, r, [-i])
+                    negative = tl.jones_rep_braid_generator(
+                        n, r, i, inverse=True
+                    )
+                    self.assertEqual(negative, tl.jones_rep_braid_word(n, r, [-i]))
                     left = positive * negative
                     right = identity
                     self.assertEqual(left.shape, right.shape)
